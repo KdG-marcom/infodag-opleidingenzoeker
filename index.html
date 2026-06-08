@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Infodag KdG: Opleidingen</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+  <style>
+    /* ── KdG huisstijl tokens ── */
+    :root {
+      --zwart:      #000000;
+      --wit:        #ffffff;
+      --grijs-bg:   #37be87;   /* donkergroen body achtergrond */
+      --grijs-lijn: #2da677;   /* iets donkerder groen voor lijnen */
+      --grijs-mid:  #282828;
+      --mint:       #37be87;
+      --paars:      #8c82b4;   /* opleidingstype badge */
+      --tekst:      #000000;
+      --tekst-sub:  #555555;
+      --radius:     0;
+      --radius-lg:  0;
+      --font: 'Roboto', Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+
+    body {
+      font-family: var(--font);
+      background: var(--grijs-bg);
+      color: var(--tekst);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Header ── */
+    header {
+      background: var(--wit);
+      border-bottom: 2px solid var(--zwart);
+      padding: 30px;
+      display: flex;
+      align-items: center;
+      gap: 0;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+
+
+    .header-text h1 {
+      font-size: 18px;
+      font-weight: 500;
+      color: var(--tekst);
+      letter-spacing: -0.2px;
+    }
+
+    .refresh-btn {
+      margin-left: auto;
+      background: none;
+      border: 1px solid var(--grijs-lijn);
+      border-radius: 0;
+      padding: 8px 14px;
+      font-size: 13px;
+      font-family: var(--font);
+      color: var(--tekst-sub);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: border-color .15s, background .15s;
+    }
+    .refresh-btn:hover {
+      border-color: var(--zwart);
+      background: var(--grijs-bg);
+      color: var(--zwart);
+    }
+    .refresh-btn.spinning svg { animation: spin .8s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Mintgroene accentbalk onder header ── */
+    .mint-balk {
+      height: 4px;
+      background: var(--mint);
+    }
+
+    /* ── Zoekbalk ── */
+    .search-wrapper {
+      padding: 30px 30px 0;
+      background: var(--grijs-bg);
+      border-bottom: none;
+      position: sticky;
+      top: 57px;
+      z-index: 90;
+    }
+
+    .search-box { position: relative; }
+
+    .search-icon {
+      position: absolute;
+      left: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--zwart);
+      pointer-events: none;
+    }
+
+    #zoek {
+      width: 100%;
+      padding: 13px 42px 13px 46px;
+      font-size: 17px;
+      font-family: var(--font);
+      font-weight: 400;
+      border: 2px solid var(--zwart);
+      border-radius: 0;
+      background: var(--wit);
+      color: var(--zwart);
+      outline: none;
+      transition: border-color .15s;
+      -webkit-appearance: none;
+    }
+    #zoek:focus {
+      border-color: var(--zwart);
+      background: var(--wit);
+    }
+    #zoek::placeholder { color: rgba(0,0,0,0.5); }
+
+    .clear-btn {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      width: 32px;
+      height: 32px;
+      cursor: pointer;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      color: var(--zwart);
+      font-size: 26px;
+      line-height: 1;
+    }
+    .clear-btn:hover { color: #555; }
+    .clear-btn.visible { display: flex; }
+
+    /* ── Resultaten ── */
+    main { flex: 1;  }
+
+    .resultaten-header {
+      font-size: 12px;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--wit);
+      margin-bottom: 12px;
+      padding-left: 1px;
+    }
+
+    .geen-resultaten {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--tekst-sub);
+    }
+    .geen-resultaten .emoji { font-size: 44px; margin-bottom: 12px; }
+    .geen-resultaten p { font-size: 16px; }
+
+    /* ── Kaartjes ── */
+    .kaarten { display: grid; gap: 2px; background: var(--zwart); border: 2px solid var(--zwart); border-radius: 0; overflow: hidden; }
+
+    .kaart {
+      background: var(--wit);
+      padding: 16px 18px;
+      position: relative;
+      border-left: 4px solid transparent;
+      transition: border-color .15s, background .15s;
+    }
+    .kaart:first-child { border-radius: 0; }
+    .kaart:last-child  { border-radius: 0; }
+    .kaart:only-child  { border-radius: 0; }
+    .kaart:hover { border-left-color: var(--zwart); background: #fafafa; }
+
+    .kaart-naam-rij {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+    .kaart-naam {
+      font-size: 16px;
+      font-weight: 500;
+      color: var(--tekst);
+      line-height: 1.3;
+    }
+
+    .kaart-type {
+      display: inline-block;
+      margin-bottom: 0;
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .8px;
+      color: var(--wit);
+      background: #282828;
+      padding: 3px 8px;
+      border-radius: 0;
+    }
+
+    .kaart-infos {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .info-rij {
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+
+    .info-label {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: .7px;
+      color: var(--tekst-sub);
+      min-width: 58px;
+      flex-shrink: 0;
+    }
+
+    .info-waarde {
+      font-size: 14px;
+      font-weight: 400;
+      color: var(--tekst);
+    }
+
+    .info-waarde.leeg {
+      color: #bbbbbb;
+      font-style: italic;
+    }
+
+    /* ── Laden ── */
+    .laden {
+      text-align: center;
+      padding: 60px 20px;
+      color: var(--tekst-sub);
+    }
+    .laden-dots {
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .laden-dots span {
+      width: 10px;
+      height: 10px;
+      border-radius: 0;
+      background: var(--mint);
+      animation: bounce .8s infinite alternate;
+    }
+    .laden-dots span:nth-child(2) { animation-delay: .2s; background: var(--zwart); }
+    .laden-dots span:nth-child(3) { animation-delay: .4s; background: var(--lime); }
+    @keyframes bounce { to { transform: translateY(-8px); opacity: .4; } }
+    .laden p { font-size: 14px; }
+
+    /* ── Fout ── */
+    .fout {
+      background: var(--wit);
+      border: 1px solid var(--grijs-lijn);
+      border-left: 4px solid #ff645a;
+      border-radius: 0;
+      padding: 18px;
+      color: var(--tekst);
+      margin: 16px 0;
+      font-size: 14px;
+    }
+    .fout strong { display: block; margin-bottom: 4px; }
+
+    mark {
+      background: var(--mint);
+      color: var(--zwart);
+      border-radius: 0;
+      padding: 0 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <script>
+    const CONFIG = {
+      token:   'path3WFJHGRNs2fDT.3f7e0520bce8b5879d732843b72b5d0edeb2e154283e47fe61a469b89573a56f',
+      baseId:  'appBu1JAcv2ArUIDW',
+      tableId: 'tblfUr00XRAeMSW13',
+      viewId:  'viwFV8bYiYtCF9w1i',
+      velden:  ['title', 'Infodag_campus', 'Infodag_locatie', 'Infodag_tags', 'Opleidingstype']
+    };
+  </script>
+
+  <header>
+    <div class="header-text">
+      <h1>Infodag KdG: Opleidingen</h1>
+    </div>
+    <button class="refresh-btn" id="refreshBtn" title="Herladen" onclick="laadData()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <polyline points="23 4 23 10 17 10"></polyline>
+        <path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path>
+      </svg>
+      Herladen
+    </button>
+  </header>
+  <div class="mint-balk"></div>
+
+  <div class="search-wrapper">
+    <div class="search-box">
+      <svg class="search-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+      <input type="text" id="zoek" placeholder="Zoek opleiding…" autocomplete="off" autocorrect="off" spellcheck="false">
+      <button class="clear-btn" id="clearBtn" onclick="wis()">×</button>
+    </div>
+  </div>
+
+  <main style="background: var(--grijs-bg); padding: 30px;">
+    <div id="content">
+      <div class="laden">
+        <div class="laden-dots"><span></span><span></span><span></span></div>
+        <p>Opleidingen laden…</p>
+      </div>
+    </div>
+  </main>
+
+  <script>
+    let alleOpleidingen = [];
+
+    function toStr(val) {
+      if (val === null || val === undefined) return '';
+      if (Array.isArray(val)) return val.join(', ');
+      return String(val);
+    }
+
+    function escHTML(s) {
+      return String(s || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;');
+    }
+
+    function highlight(tekst, q) {
+      if (!q) return escHTML(tekst);
+      const escaped = escHTML(tekst);
+      const escQ = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      return escaped.replace(new RegExp(escQ, 'gi'), m => `<mark>${m}</mark>`);
+    }
+
+    async function laadData() {
+      const btn = document.getElementById('refreshBtn');
+      btn.classList.add('spinning');
+      let records = [];
+      let offset = null;
+
+      try {
+        do {
+          const params = new URLSearchParams({
+            view: CONFIG.viewId,
+            pageSize: 100,
+            cellFormat: 'string',
+            timeZone: 'Europe/Brussels',
+            userLocale: 'nl'
+          });
+          CONFIG.velden.forEach(f => params.append('fields[]', f));
+          if (offset) params.set('offset', offset);
+
+          const resp = await fetch(
+            `https://api.airtable.com/v0/${CONFIG.baseId}/${CONFIG.tableId}?${params}`,
+            { headers: { Authorization: `Bearer ${CONFIG.token}` } }
+          );
+
+          if (!resp.ok) {
+            const err = await resp.json().catch(() => ({}));
+            throw new Error(err.error?.message || `HTTP ${resp.status}`);
+          }
+
+          const data = await resp.json();
+          records = records.concat(data.records);
+          offset = data.offset || null;
+        } while (offset);
+
+        alleOpleidingen = records.map(r => ({
+          id:      r.id,
+          naam:    toStr(r.fields.title),
+          campus:  toStr(r.fields.Infodag_campus),
+          locatie: toStr(r.fields.Infodag_locatie),
+          tags:    toStr(r.fields.Infodag_tags),
+          type:    toStr(r.fields.Opleidingstype)
+        })).filter(o => o.naam);
+
+        alleOpleidingen.sort((a, b) => a.naam.localeCompare(b.naam, 'nl'));
+        render();
+
+      } catch (e) {
+        document.getElementById('content').innerHTML = `
+          <div class="fout">
+            <strong>Kon opleidingen niet laden</strong>
+            ${escHTML(e.message)}
+          </div>`;
+      } finally {
+        btn.classList.remove('spinning');
+      }
+    }
+
+    const zoekInput = document.getElementById('zoek');
+    const clearBtn  = document.getElementById('clearBtn');
+
+    zoekInput.addEventListener('input', () => {
+      clearBtn.classList.toggle('visible', zoekInput.value.length > 0);
+      render();
+    });
+
+    function wis() {
+      zoekInput.value = '';
+      clearBtn.classList.remove('visible');
+      render();
+      zoekInput.focus();
+    }
+
+    const TYPE_KLEUREN = {
+      'Graduaatsopleiding':           '#ff873c',
+      'Professionele bachelor':       '#37be87',
+      'Academisch gerichte bachelor': '#5aaab4',
+      'Bachelor na bachelor':         '#8c82b4',
+      'Postgraduaat':                 '#ff645a',
+      'Master':                       '#6991c8',
+      'Educatieve master':            '#ebb991',
+      'Schakeljaar':                  '#cdeb32',
+      'Voorbereidingsprogramma':      '#ff9bd2',
+      'Micro-credential':             '#b9b4a0',
+    };
+    function typeKleur(type) {
+      return TYPE_KLEUREN[type] || '#282828';
+    }
+
+    function render() {
+      const q = zoekInput.value.trim().toLowerCase();
+      let gefilterd = alleOpleidingen;
+
+      if (q) {
+        gefilterd = gefilterd.filter(o =>
+          o.naam.toLowerCase().includes(q) ||
+          o.campus.toLowerCase().includes(q) ||
+          o.locatie.toLowerCase().includes(q) ||
+          o.tags.toLowerCase().includes(q) ||
+          o.type.toLowerCase().includes(q)
+        );
+      }
+
+      const el = document.getElementById('content');
+
+      if (gefilterd.length === 0) {
+        el.innerHTML = `
+          <div class="geen-resultaten">
+            <div class="emoji">🔍</div>
+            <p>Geen opleidingen gevonden${q ? ` voor <strong>"${escHTML(zoekInput.value)}"</strong>` : ''}</p>
+          </div>`;
+        return;
+      }
+
+      el.innerHTML = `
+        <p class="resultaten-header">${gefilterd.length} opleiding${gefilterd.length !== 1 ? 'en' : ''}</p>
+        <div class="kaarten">
+          ${gefilterd.map(o => `
+            <div class="kaart">
+              <div class="kaart-naam-rij">
+                <span class="kaart-naam">${highlight(o.naam, q)}</span>
+                ${o.type ? `<span class="kaart-type" style="background:${typeKleur(o.type)}">${escHTML(o.type)}</span>` : ''}
+              </div>
+              <div class="kaart-infos">
+                <div class="info-rij">
+                  <span class="info-label">Campus</span>
+                  <span class="info-waarde ${o.campus ? '' : 'leeg'}">${o.campus ? highlight(o.campus, q) : '—'}</span>
+                </div>
+                <div class="info-rij">
+                  <span class="info-label">Locatie</span>
+                  <span class="info-waarde ${o.locatie ? '' : 'leeg'}">${o.locatie ? highlight(o.locatie, q) : '—'}</span>
+                </div>
+              </div>
+            </div>
+          `).join('')}
+        </div>
+      `;
+    }
+
+    laadData();
+  </script>
+</body>
+</html>
